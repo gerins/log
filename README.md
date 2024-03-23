@@ -16,11 +16,13 @@ package main
 import (
 	"context"
 	"net/http"
+	"time"
+
+	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 
 	"github.com/gerins/log"
 	middlewareLog "github.com/gerins/log/middleware/echo"
-	"github.com/labstack/echo/v4"
-	"github.com/labstack/echo/v4/middleware"
 )
 
 func main() {
@@ -39,6 +41,7 @@ func main() {
 
 		// Capture a duration for a function
 		defer log.Context(ctx).RecordDuration("handler total process duration").Stop()
+		time.Sleep(100 * time.Millisecond) // Simulate a process
 
 		// Assign user id to Log Request
 		log.Context(ctx).UserID = 2020
@@ -76,10 +79,10 @@ func main() {
 ```json
 {
     "level": "info",
-    "time": "2024-03-24T00:12:28.966+0700",
+    "time": "2024-03-24T00:18:38.456+0700",
     "caller": "runtime/asm_amd64.s:1650",
     "msg": "REQUEST_LOG",
-    "ProcessID": "nRtJ4iAW8YrzcR7ASBM6",
+    "ProcessID": "jXRKAxgBG6zAqdNfP9ce",
     "UserID": 2020,
     "IP": "127.0.0.1",
     "Method": "GET",
@@ -100,7 +103,7 @@ func main() {
     },
     "ResponseBody": null,
     "StatusCode": 200,
-    "RequestDuration": 0,
+    "RequestDuration": 105,
     "ExtraData": {
         "userData": {
             "Name": "Bob",
@@ -109,24 +112,24 @@ func main() {
     },
     "SubLog": [
         {
-            "level": "[DEBUG] fermi/main.go:43",
+            "level": "[DEBUG] echo/main.go:46",
             "message": "Testing Log Request Debug"
         },
         {
-            "level": "[INFO] fermi/main.go:44",
+            "level": "[INFO] echo/main.go:47",
             "message": "Testing Log Request Info"
         },
         {
-            "level": "[WARN] fermi/main.go:45",
+            "level": "[WARN] echo/main.go:48",
             "message": "Testing Log Request Warn"
         },
         {
-            "level": "[ERROR] fermi/main.go:46",
+            "level": "[ERROR] echo/main.go:49",
             "message": "Testing Log Request Error"
         },
         {
-            "level": "[DURATION] fermi/main.go:54",
-            "message": "[0.796ms] handler total process duration"
+            "level": "[DURATION] echo/main.go:57",
+            "message": "[105.034ms] handler total process duration"
         }
     ]
 }
