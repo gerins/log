@@ -11,23 +11,46 @@ go get -u github.com/gerins/log
 
 ### Echo 
 ```go
+package main
+
+import (
+	"context"
+	"net/http"
+
+	"github.com/gerins/log"
+	middlewareLog "github.com/gerins/log/middleware/echo"
+	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
+)
+
 func main() {
-	// Using default configuration, please use InitWithConfig() for production environment.
-	log.Init() 
+	// Using the default configuration. Please use InitWithConfig() for the production environment.
+	log.Init()
 	e := echo.New()
 
-	// Init logging middleware
+	// Initialize logging middleware
 	e.Use(middlewareLog.SetLogRequest())                       // Mandatory
 	e.Use(middleware.BodyDump(middlewareLog.SaveLogRequest())) // Mandatory
 
-	// Init handler
+	// Route to simulate logging request
 	e.GET("/", func(c echo.Context) error {
-		// Get context from echo locals.
+		// Get context from echo locals
 		ctx := c.Get("ctx").(context.Context)
 
-		// Assign user id to Log Request model
-		// So wen can know who make the request to the server
+		// Capture a duration for a function
+		defer log.Context(ctx).RecordDuration("handler total process duration").Stop()
+
+		// Assign user id to Log Request
 		log.Context(ctx).UserID = 2020
+
+		// Add some extra data
+		log.Context(ctx).ExtraData["userData"] = struct {
+			Name string
+			Age  int
+		}{
+			Name: "Bob",
+			Age:  29,
+		}
 
 		// Log Request
 		log.Context(ctx).Debug("Testing Log Request Debug")
@@ -46,49 +69,65 @@ func main() {
 
 	e.Start("localhost:8080")
 }
+
 ```
 
 ## 🍀 Sample Log Request
 ```json
 {
-   "level": "info",
-   "time": "2021-10-23T15:02:53.189+0700",
-   "caller": "echo/log_request.go:59",
-   "msg": "REQUEST_LOG",
-   "ProcessID": "JLFyq8YcfN5KOy9knY42",
-   "UserID": 2020,
-   "IP": "127.0.0.1",
-   "Method": "GET",
-   "URL": "localhost:8080/",
-   "RequestHeader": {
-      "Accept": ["*/*"],
-      "User-Agent": ["curl/7.68.0"]
-   },
-   "RequestBody": {},
-   "ResponseHeader": {
-      "Content-Type": ["text/plain; charset=UTF-8"]
-   },
-   "ResponseBody": null,
-   "StatusCode": 200,
-   "RequestDuration": 1,
-   "ExtraData": null,
-   "SubLog": [
-      {
-         "level": "DEBUG",
-         "message": "Testing Log Request Debug"
-      },
-      {
-         "level": "INFO",
-         "message": "Testing Log Request Info"
-      },
-      {
-         "level": "WARN",
-         "message": "Testing Log Request Warn"
-      },
-      {
-         "level": "ERROR",
-         "message": "Testing Log Request Error"
-      }
-   ]
+    "level": "info",
+    "time": "2024-03-24T00:12:28.966+0700",
+    "caller": "runtime/asm_amd64.s:1650",
+    "msg": "REQUEST_LOG",
+    "ProcessID": "nRtJ4iAW8YrzcR7ASBM6",
+    "UserID": 2020,
+    "IP": "127.0.0.1",
+    "Method": "GET",
+    "URL": "localhost:8080/",
+    "RequestHeader": {
+        "Accept": [
+            "*/*"
+        ],
+        "User-Agent": [
+            "curl/8.1.2"
+        ]
+    },
+    "RequestBody": {},
+    "ResponseHeader": {
+        "Content-Type": [
+            "text/plain; charset=UTF-8"
+        ]
+    },
+    "ResponseBody": null,
+    "StatusCode": 200,
+    "RequestDuration": 0,
+    "ExtraData": {
+        "userData": {
+            "Name": "Bob",
+            "Age": 29
+        }
+    },
+    "SubLog": [
+        {
+            "level": "[DEBUG] fermi/main.go:43",
+            "message": "Testing Log Request Debug"
+        },
+        {
+            "level": "[INFO] fermi/main.go:44",
+            "message": "Testing Log Request Info"
+        },
+        {
+            "level": "[WARN] fermi/main.go:45",
+            "message": "Testing Log Request Warn"
+        },
+        {
+            "level": "[ERROR] fermi/main.go:46",
+            "message": "Testing Log Request Error"
+        },
+        {
+            "level": "[DURATION] fermi/main.go:54",
+            "message": "[0.796ms] handler total process duration"
+        }
+    ]
 }
 ```
