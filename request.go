@@ -13,6 +13,14 @@ var (
 	logRequestKey   contextKey
 )
 
+const (
+	subLevelDebug = "DEBUG"
+	subLevelInfo  = "INFO"
+	subLevelWarn  = "WARN"
+	subLevelError = "ERROR"
+	subLevelFatal = "FATAL"
+)
+
 type (
 	contextKey int
 
@@ -54,7 +62,7 @@ func NewRequest() *request {
 func (m *request) Save() {
 	go func() {
 		m.WaitGroup.Wait() // Wait for all goroutine finish before logging
-		globalLogger.LogAttrs(context.Background(), slog.LevelInfo, levelRequest,
+		globalLogger.LogAttrs(context.Background(), LevelTrace, "",
 			slog.String("caller", GetCaller("", 1)),
 			slog.String(processID, m.processID),
 			slog.String("ip", m.IP),
@@ -66,7 +74,6 @@ func (m *request) Save() {
 			slog.Any("requestBody", m.ReqBody),
 			slog.Any("responseHeader", m.RespHeader),
 			slog.Any("responseBody", m.RespBody),
-
 			slog.Any("extraData", m.ExtraData),
 			slog.Any("subLog", m.subLogs),
 		)
@@ -103,47 +110,47 @@ func (m *request) RecordDuration(processName string) processData {
 
 func (m *request) Debug(i ...any) {
 	msg := formatMultipleArguments(i)
-	m.subLogs = append(m.subLogs, subLog{Level: GetCaller(levelDebug, subLogSkipLevel), Message: msg})
+	m.subLogs = append(m.subLogs, subLog{Level: GetCaller(subLevelDebug, subLogSkipLevel), Message: msg})
 }
 
 func (m *request) Debugf(format string, i ...any) {
-	m.subLogs = append(m.subLogs, subLog{Level: GetCaller(levelDebug, subLogSkipLevel), Message: fmt.Sprintf(format, i...)})
+	m.subLogs = append(m.subLogs, subLog{Level: GetCaller(subLevelDebug, subLogSkipLevel), Message: fmt.Sprintf(format, i...)})
 }
 
 func (m *request) Info(i ...any) {
 	msg := formatMultipleArguments(i)
-	m.subLogs = append(m.subLogs, subLog{Level: GetCaller(levelInfo, subLogSkipLevel), Message: msg})
+	m.subLogs = append(m.subLogs, subLog{Level: GetCaller(subLevelInfo, subLogSkipLevel), Message: msg})
 }
 
 func (m *request) Infof(format string, i ...any) {
-	m.subLogs = append(m.subLogs, subLog{Level: GetCaller(levelInfo, subLogSkipLevel), Message: fmt.Sprintf(format, i...)})
+	m.subLogs = append(m.subLogs, subLog{Level: GetCaller(subLevelInfo, subLogSkipLevel), Message: fmt.Sprintf(format, i...)})
 }
 
 func (m *request) Warn(i ...any) {
 	msg := formatMultipleArguments(i)
-	m.subLogs = append(m.subLogs, subLog{Level: GetCaller(levelWarn, subLogSkipLevel), Message: msg})
+	m.subLogs = append(m.subLogs, subLog{Level: GetCaller(subLevelWarn, subLogSkipLevel), Message: msg})
 }
 
 func (m *request) Warnf(format string, i ...any) {
-	m.subLogs = append(m.subLogs, subLog{Level: GetCaller(levelWarn, subLogSkipLevel), Message: fmt.Sprintf(format, i...)})
+	m.subLogs = append(m.subLogs, subLog{Level: GetCaller(subLevelWarn, subLogSkipLevel), Message: fmt.Sprintf(format, i...)})
 }
 
 func (m *request) Error(i ...any) {
 	msg := formatMultipleArguments(i)
-	m.subLogs = append(m.subLogs, subLog{Level: GetCaller(levelError, subLogSkipLevel), Message: msg})
+	m.subLogs = append(m.subLogs, subLog{Level: GetCaller(subLevelError, subLogSkipLevel), Message: msg})
 }
 
 func (m *request) Errorf(format string, i ...any) {
-	m.subLogs = append(m.subLogs, subLog{Level: GetCaller(levelError, subLogSkipLevel), Message: fmt.Sprintf(format, i...)})
+	m.subLogs = append(m.subLogs, subLog{Level: GetCaller(subLevelError, subLogSkipLevel), Message: fmt.Sprintf(format, i...)})
 }
 
 func (m *request) Fatal(i ...any) {
 	msg := formatMultipleArguments(i)
-	m.subLogs = append(m.subLogs, subLog{Level: GetCaller(levelFatal, subLogSkipLevel), Message: msg})
+	m.subLogs = append(m.subLogs, subLog{Level: GetCaller(subLevelFatal, subLogSkipLevel), Message: msg})
 }
 
 func (m *request) Fatalf(format string, i ...any) {
-	m.subLogs = append(m.subLogs, subLog{Level: GetCaller(levelFatal, subLogSkipLevel), Message: fmt.Sprintf(format, i...)})
+	m.subLogs = append(m.subLogs, subLog{Level: GetCaller(subLevelFatal, subLogSkipLevel), Message: fmt.Sprintf(format, i...)})
 }
 
 func (m *request) SubLog(level, message string) {
