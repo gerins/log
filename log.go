@@ -98,14 +98,18 @@ func InitWithConfig(cfg Config) {
 	}
 
 	if cfg.LogToTerminal {
-		output = io.MultiWriter(os.Stdout, output)
+		output = io.MultiWriter(os.Stdout, output) // Write log output to stdout & file
 	}
 
 	globalLogger = slog.New(slog.NewJSONHandler(output, &slog.HandlerOptions{
 		Level: cfg.Level,
 		ReplaceAttr: func(groups []string, a slog.Attr) slog.Attr {
-			// Customize the name of the level key and the output string, including
-			// custom level values.
+			// Remove field msg if the value is empty
+			if a.Key == slog.MessageKey && a.Value.String() == "" {
+				return slog.Attr{}
+			}
+
+			// Customize the name of the level key and the output string, including custom level values.
 			if a.Key == slog.LevelKey {
 				// Handle custom level values.
 				level := a.Value.Any().(slog.Level)
@@ -124,6 +128,7 @@ func InitWithConfig(cfg Config) {
 					a.Value = slog.StringValue("REQUEST")
 				}
 			}
+
 			return a
 		},
 	}))
