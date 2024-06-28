@@ -26,31 +26,35 @@ const (
 )
 
 var (
-	globalLogger *slog.Logger
+	globalLogger            *slog.Logger
+	enableHideSensitiveData bool
 
 	DefaultConfig = Config{
-		LogToTerminal: true,
-		LogToFile:     false,
-		Location:      "/log/",
-		FileLogName:   "server_log",
-		FileFormat:    ".%Y-%b-%d-%H-%M.log",
-		MaxAge:        30,
-		RotationFile:  24,
-		Level:         LevelDebug,
+		LogToTerminal:     true,
+		LogToFile:         false,
+		Location:          "/log/",
+		FileLogName:       "server_log",
+		FileFormat:        ".%Y-%b-%d-%H-%M.log",
+		MaxAge:            30,
+		RotationFile:      24,
+		Level:             LevelDebug,
+		CustomWriter:      nil,
+		HideSensitiveData: false,
 	}
 )
 
 type (
 	Config struct {
-		LogToTerminal bool       // Default true.
-		LogToFile     bool       // Default false.
-		Location      string     // Location file log will be save. Default "project_directory/log/".
-		FileLogName   string     // File log name. Default "server_log".
-		FileFormat    string     // Default "FileLogName.2021-Oct-22-00-00.log"
-		MaxAge        int        // Days before deleting log file. Default 30 days.
-		RotationFile  int        // Hour before creating new file. Default 24 hour.
-		Level         slog.Level // Log output level, default level DEBUG
-		CustomWriter  io.Writer  // Specify custom writer for log output
+		LogToTerminal     bool       // Default true.
+		LogToFile         bool       // Default false.
+		Location          string     // Location file log will be save. Default "project_directory/log/".
+		FileLogName       string     // File log name. Default "server_log".
+		FileFormat        string     // Default "FileLogName.2021-Oct-22-00-00.log"
+		MaxAge            int        // Days before deleting log file. Default 30 days.
+		RotationFile      int        // Hour before creating new file. Default 24 hour.
+		Level             slog.Level // Log output level, default level DEBUG
+		CustomWriter      io.Writer  // Specify custom writer for log output
+		HideSensitiveData bool       // Enable hide sensitive data with struct tag `log:"hide"`
 	}
 )
 
@@ -77,6 +81,8 @@ func InitWithConfig(cfg Config) {
 	if cfg.Level == 0 {
 		cfg.Level = DefaultConfig.Level
 	}
+
+	enableHideSensitiveData = cfg.HideSensitiveData
 
 	var output []io.Writer
 

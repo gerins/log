@@ -3,7 +3,9 @@ package log
 import (
 	"fmt"
 	"math/rand"
+	"reflect"
 	"runtime"
+	"strings"
 
 	"go.uber.org/zap/zapcore"
 )
@@ -40,4 +42,23 @@ func GetCaller(level string, skip int) string {
 		return entryCaller.TrimmedPath()
 	}
 	return fmt.Sprintf("[%s] %s", level, entryCaller.TrimmedPath())
+}
+
+func maskSensitiveData(payload any) {
+	// Check if req is a pointer to a struct
+	v := reflect.ValueOf(payload)
+	if v.Kind() != reflect.Ptr || v.Elem().Kind() != reflect.Struct {
+		return
+	}
+
+	v = v.Elem()
+	t := v.Type()
+
+	for i := 0; i < v.NumField(); i++ {
+		field := v.Field(i)
+		tag := t.Field(i).Tag.Get("log")
+		if tag == "hide" && field.Kind() == reflect.String {
+			field.SetString(strings.Repeat("*", len(field.String())))
+		}
+	}
 }

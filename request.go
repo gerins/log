@@ -62,6 +62,12 @@ func NewRequest() *request {
 func (m *request) Save() {
 	go func() {
 		m.WaitGroup.Wait() // Wait for all goroutine finish before logging
+
+		if enableHideSensitiveData {
+			maskSensitiveData(m.ReqBody)
+			maskSensitiveData(m.RespBody)
+		}
+
 		globalLogger.LogAttrs(context.Background(), LevelRequest, "",
 			slog.String("caller", GetCaller("", 1)),
 			slog.String(processID, m.processID),
