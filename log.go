@@ -45,14 +45,14 @@ var (
 
 type (
 	Config struct {
-		LogToTerminal     bool       // Default true.
-		LogToFile         bool       // Default false.
+		LogToTerminal     bool       // Set log output to stdout
+		LogToFile         bool       // Set log output to file
 		Location          string     // Location file log will be save. Default "project_directory/log/".
 		FileLogName       string     // File log name. Default "server_log".
 		FileFormat        string     // Default "FileLogName.2021-Oct-22-00-00.log"
 		MaxAge            int        // Days before deleting log file. Default 30 days.
 		RotationFile      int        // Hour before creating new file. Default 24 hour.
-		Level             slog.Level // Log output level, default level DEBUG
+		Level             slog.Level // Log output level. Default level DEBUG
 		CustomWriter      io.Writer  // Specify custom writer for log output
 		HideSensitiveData bool       // Enable hide sensitive data with struct tag `log:"hide"`
 	}
