@@ -62,7 +62,7 @@ func NewRequest() *request {
 func (m *request) Save() {
 	go func() {
 		m.WaitGroup.Wait() // Wait for all goroutine finish before logging
-		globalLogger.LogAttrs(context.Background(), LevelTrace, "",
+		globalLogger.LogAttrs(context.Background(), LevelRequest, "",
 			slog.String("caller", GetCaller("", 1)),
 			slog.String(processID, m.processID),
 			slog.String("ip", m.IP),
