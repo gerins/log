@@ -28,8 +28,9 @@ const (
 var (
 	globalLogger *slog.Logger
 
-	DefaultLogConfig = Config{
+	DefaultConfig = Config{
 		LogToTerminal: true,
+		LogToFile:     false,
 		Location:      "/log/",
 		FileLogName:   "server_log",
 		FileFormat:    ".%Y-%b-%d-%H-%M.log",
@@ -41,67 +42,77 @@ var (
 
 type (
 	Config struct {
-		LogToTerminal bool   // Highly recommended disable in production server. Default true.
-		Location      string // Location file log will be save. Default "project_directory/log/".
-		FileLogName   string // File log name. Default "server_log".
-		FileFormat    string // Default "FileLogName.2021-Oct-22-00-00.log"
-		MaxAge        int    // Days before deleting log file. Default 30 days.
-		RotationFile  int    // Hour before creating new file. Default 24 hour.
-		Level         slog.Level
+		LogToTerminal bool       // Default true.
+		LogToFile     bool       // Default false.
+		Location      string     // Location file log will be save. Default "project_directory/log/".
+		FileLogName   string     // File log name. Default "server_log".
+		FileFormat    string     // Default "FileLogName.2021-Oct-22-00-00.log"
+		MaxAge        int        // Days before deleting log file. Default 30 days.
+		RotationFile  int        // Hour before creating new file. Default 24 hour.
+		Level         slog.Level // Log output level, default level DEBUG
+		CustomWriter  io.Writer  // Specify custom writer for log output
 	}
 )
 
 func Init() {
-	InitWithConfig(DefaultLogConfig)
+	InitWithConfig(DefaultConfig)
 }
 
 func InitWithConfig(cfg Config) {
 	if cfg.Location == "" {
-		cfg.Location = DefaultLogConfig.Location
+		cfg.Location = DefaultConfig.Location
 	}
 	if cfg.FileLogName == "" {
-		cfg.FileLogName = DefaultLogConfig.FileLogName
+		cfg.FileLogName = DefaultConfig.FileLogName
 	}
 	if cfg.FileFormat == "" {
-		cfg.FileFormat = DefaultLogConfig.FileFormat
+		cfg.FileFormat = DefaultConfig.FileFormat
 	}
 	if cfg.MaxAge == 0 {
-		cfg.MaxAge = DefaultLogConfig.MaxAge
+		cfg.MaxAge = DefaultConfig.MaxAge
 	}
 	if cfg.RotationFile == 0 {
-		cfg.RotationFile = DefaultLogConfig.RotationFile
+		cfg.RotationFile = DefaultConfig.RotationFile
 	}
 	if cfg.Level == 0 {
-		cfg.Level = DefaultLogConfig.Level
+		cfg.Level = DefaultConfig.Level
 	}
 
-	// Find current project directory
-	currentDirectory, err := os.Getwd()
-	if err != nil {
-		log.Fatalf("failed find current Directory for setup Log file, %s", err.Error())
-	}
-
-	fileLocation := currentDirectory + cfg.Location
-	fileFormat := fmt.Sprintf("%s%s", cfg.FileLogName, cfg.FileFormat)
-
-	var output io.Writer
-
-	// Initiate file rotate log
-	output, err = rotatelogs.New(
-		fileLocation+fileFormat,
-		rotatelogs.WithMaxAge(time.Duration(cfg.MaxAge)*24*time.Hour),                // Maximum time before deleting file log
-		rotatelogs.WithRotationTime(time.Duration(cfg.RotationFile)*time.Hour),       // Time before creating new file
-		rotatelogs.WithClock(rotatelogs.Local),                                       // Use local time for file rotation
-		rotatelogs.WithLinkName(fmt.Sprintf("%s.log", fileLocation+cfg.FileLogName))) // Use file shortcut for accessing log file
-	if err != nil {
-		log.Fatalf("failed initiate file log rotation, %s", err.Error())
-	}
+	var output []io.Writer
 
 	if cfg.LogToTerminal {
-		output = io.MultiWriter(os.Stdout, output) // Write log output to stdout & file
+		output = append(output, os.Stdout)
 	}
 
-	globalLogger = slog.New(slog.NewJSONHandler(output, &slog.HandlerOptions{
+	if cfg.LogToFile {
+		// Find current project directory
+		currentDirectory, err := os.Getwd()
+		if err != nil {
+			log.Fatalf("failed find current Directory for setup Log file, %s", err.Error())
+		}
+
+		fileLocation := currentDirectory + cfg.Location
+		fileFormat := fmt.Sprintf("%s%s", cfg.FileLogName, cfg.FileFormat)
+
+		// Initiate file rotate log
+		fileWriter, err := rotatelogs.New(
+			fileLocation+fileFormat,
+			rotatelogs.WithMaxAge(time.Duration(cfg.MaxAge)*24*time.Hour),                // Maximum time before deleting file log
+			rotatelogs.WithRotationTime(time.Duration(cfg.RotationFile)*time.Hour),       // Time before creating new file
+			rotatelogs.WithClock(rotatelogs.Local),                                       // Use local time for file rotation
+			rotatelogs.WithLinkName(fmt.Sprintf("%s.log", fileLocation+cfg.FileLogName))) // Use file shortcut for accessing log file
+		if err != nil {
+			log.Fatalf("failed initiate file log rotation, %s", err.Error())
+		}
+
+		output = append(output, fileWriter)
+	}
+
+	if cfg.CustomWriter != nil {
+		output = append(output, cfg.CustomWriter)
+	}
+
+	globalLogger = slog.New(slog.NewJSONHandler(io.MultiWriter(output...), &slog.HandlerOptions{
 		Level: cfg.Level,
 		ReplaceAttr: func(groups []string, a slog.Attr) slog.Attr {
 			// Remove field msg if the value is empty
