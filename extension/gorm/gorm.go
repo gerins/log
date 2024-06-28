@@ -70,21 +70,21 @@ func (l *logExtension) LogMode(level logger.LogLevel) logger.Interface {
 }
 
 // Info print info
-func (l logExtension) Info(ctx context.Context, msg string, data ...interface{}) {
+func (l logExtension) Info(ctx context.Context, msg string, data ...any) {
 	if l.LogLevel >= logger.Info {
 		log.Context(ctx).SubLog(l.getCallerLocation(), fmt.Sprintf(l.infoStr+msg, data...))
 	}
 }
 
 // Warn print warn messages
-func (l logExtension) Warn(ctx context.Context, msg string, data ...interface{}) {
+func (l logExtension) Warn(ctx context.Context, msg string, data ...any) {
 	if l.LogLevel >= logger.Warn {
 		log.Context(ctx).SubLog(l.getCallerLocation(), fmt.Sprintf(l.warnStr+msg, data...))
 	}
 }
 
 // Error print error messages
-func (l logExtension) Error(ctx context.Context, msg string, data ...interface{}) {
+func (l logExtension) Error(ctx context.Context, msg string, data ...any) {
 	if l.LogLevel >= logger.Error {
 		log.Context(ctx).SubLog(l.getCallerLocation(), fmt.Sprintf(l.errStr+msg, data...))
 	}

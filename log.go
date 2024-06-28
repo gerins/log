@@ -1,24 +1,31 @@
 package log
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"log"
+	"log/slog"
 	"os"
 	"time"
 
 	rotatelogs "github.com/lestrrat-go/file-rotatelogs"
-	"go.uber.org/zap"
-	"go.uber.org/zap/zapcore"
 )
 
 const (
-	processID = "ProcessID"
+	processID    = "processID"
+	levelDebug   = "DEBUG"
+	levelInfo    = "INFO"
+	levelWarn    = "WARN"
+	levelError   = "ERROR"
+	levelFatal   = "FATAL"
+	levelRequest = "REQUEST_LOG"
+	levelTracing = "TRACING_LOG"
 )
 
 var (
-	globalLogger  *zap.Logger
-	tracingLogger *zap.Logger
+	globalLogger *slog.Logger
 
 	DefaultLogConfig = Config{
 		LogToTerminal: true,
@@ -27,7 +34,6 @@ var (
 		FileFormat:    ".%Y-%b-%d-%H-%M.log",
 		MaxAge:        30,
 		RotationFile:  24,
-		UseStackTrace: false,
 	}
 )
 
@@ -39,7 +45,6 @@ type (
 		FileFormat    string // Default "FileLogName.2021-Oct-22-00-00.log"
 		MaxAge        int    // Days before deleting log file. Default 30 days.
 		RotationFile  int    // Hour before creating new file. Default 24 hour.
-		UseStackTrace bool   // Print stack trace to log file. Default false.
 	}
 )
 
@@ -73,99 +78,85 @@ func InitWithConfig(cfg Config) {
 	fileLocation := currentDirectory + cfg.Location
 	fileFormat := fmt.Sprintf("%s%s", cfg.FileLogName, cfg.FileFormat)
 
+	var output io.Writer
+
 	// Initiate file rotate log
-	rotateLog, err := rotatelogs.New(
+	output, err = rotatelogs.New(
 		fileLocation+fileFormat,
-		rotatelogs.WithMaxAge(time.Duration(cfg.MaxAge)*24*time.Hour),          // Maximum time before deleting file log
-		rotatelogs.WithRotationTime(time.Duration(cfg.RotationFile)*time.Hour), // Time before creating new file
-		rotatelogs.WithClock(rotatelogs.Local),                                 // Use local time for file rotation
-		rotatelogs.WithLinkName(fileLocation+cfg.FileLogName))                  // Use file shortcut for accessing log file
+		rotatelogs.WithMaxAge(time.Duration(cfg.MaxAge)*24*time.Hour),                // Maximum time before deleting file log
+		rotatelogs.WithRotationTime(time.Duration(cfg.RotationFile)*time.Hour),       // Time before creating new file
+		rotatelogs.WithClock(rotatelogs.Local),                                       // Use local time for file rotation
+		rotatelogs.WithLinkName(fmt.Sprintf("%s.log", fileLocation+cfg.FileLogName))) // Use file shortcut for accessing log file
 	if err != nil {
 		log.Fatalf("failed initiate file log rotation, %s", err.Error())
 	}
 
-	// Creating log encoder
-	encoder := zap.NewProductionEncoderConfig()
-	encoder.TimeKey = "time"
-	encoder.EncodeTime = zapcore.ISO8601TimeEncoder
-
-	// Initiate log output
-	outputToFile := zapcore.NewCore(zapcore.NewJSONEncoder(encoder), zapcore.AddSync(rotateLog), zapcore.InfoLevel)
-	outputToTeriminal := zapcore.NewCore(zapcore.NewJSONEncoder(encoder), zapcore.AddSync(os.Stdout), zapcore.InfoLevel)
-
-	// Building the zap core
-	core := zapcore.NewTee(outputToFile)
 	if cfg.LogToTerminal {
-		core = zapcore.NewTee(outputToFile, outputToTeriminal)
+		output = io.MultiWriter(os.Stdout, output)
 	}
 
-	// Creating Zap core
-	if cfg.UseStackTrace {
-		globalLogger = zap.New(core, zap.AddCaller(), zap.AddStacktrace(zap.ErrorLevel), zap.AddCallerSkip(1))
-		tracingLogger = zap.New(core, zap.AddCaller(), zap.AddStacktrace(zap.ErrorLevel), zap.AddCallerSkip(3))
-	} else {
-		globalLogger = zap.New(core, zap.AddCaller(), zap.AddCallerSkip(1))
-		tracingLogger = zap.New(core, zap.AddCaller(), zap.AddCallerSkip(3))
-	}
+	globalLogger = slog.New(slog.NewJSONHandler(output, nil))
 }
 
-func Debug(i ...interface{}) {
+func Debug(i ...any) {
 	globalLogger.Debug(formatMultipleArguments(i))
 }
 
-func Debugf(format string, i ...interface{}) {
+func Debugf(format string, i ...any) {
 	globalLogger.Debug(fmt.Sprintf(format, i...))
 }
 
-func Info(i ...interface{}) {
+func Info(i ...any) {
 	globalLogger.Info(formatMultipleArguments(i))
 }
 
-func Infof(format string, i ...interface{}) {
+func Infof(format string, i ...any) {
 	globalLogger.Info(fmt.Sprintf(format, i...))
 }
 
-func Warn(i ...interface{}) {
+func Warn(i ...any) {
 	globalLogger.Warn(formatMultipleArguments(i))
 }
 
-func Warnf(format string, i ...interface{}) {
+func Warnf(format string, i ...any) {
 	globalLogger.Warn(fmt.Sprintf(format, i...))
 }
 
-func Error(i ...interface{}) {
+func Error(i ...any) {
 	globalLogger.Error(formatMultipleArguments(i))
 }
 
-func Errorf(format string, i ...interface{}) {
+func Errorf(format string, i ...any) {
 	globalLogger.Error(fmt.Sprintf(format, i...))
 }
 
-func Fatal(i ...interface{}) {
-	globalLogger.Fatal(formatMultipleArguments(i))
+func Fatal(i ...any) {
+	globalLogger.Error(formatMultipleArguments(i))
+	os.Exit(1)
 }
 
-func Fatalf(msg string, i ...interface{}) {
-	globalLogger.Fatal(fmt.Sprintf(msg, i...))
+func Fatalf(msg string, i ...any) {
+	globalLogger.Error(fmt.Sprintf(msg, i...))
+	os.Exit(1)
 }
 
-// Special log only for tracing service to service communication
-func Tracing(processId, url, method string, resCode int, resPayload []byte, reqHeader, payload, respHeader interface{}, err error, dur int64) {
-	var responsePayload interface{}
+// Trace service to service communication
+func Tracing(processId, url, method string, resCode int, resPayload []byte, reqHeader, payload, respHeader any, err error, dur int64) {
+	var responsePayload any
 	if err := json.Unmarshal(resPayload, &responsePayload); err != nil {
 		responsePayload = string(resPayload)
 	}
-
-	tracingLogger.Info("TRACING_LOG",
-		zap.String(processID, processId),
-		zap.String("URL", url),
-		zap.String("Method", method),
-		zap.Any("RequestHeader", reqHeader),
-		zap.Any("RequestBody", payload),
-		zap.Any("ResponseHeader", respHeader),
-		zap.Any("ResponseBody", responsePayload),
-		zap.Int("StatusCode", resCode),
-		zap.Int64("RequestDuration", dur),
-		zap.Any("Error", err),
+	go globalLogger.LogAttrs(context.Background(), slog.LevelInfo, levelTracing,
+		slog.String("caller", GetCaller("", 3)),
+		slog.String(processID, processId),
+		slog.String("method", method),
+		slog.String("url", url),
+		slog.Int("statusCode", resCode),
+		slog.Int64("requestDuration", dur),
+		slog.Any("error", err),
+		slog.Any("requestHeader", reqHeader),
+		slog.Any("requestBody", payload),
+		slog.Any("responseHeader", respHeader),
+		slog.Any("responseBody", responsePayload),
 	)
 }

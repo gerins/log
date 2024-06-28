@@ -30,9 +30,6 @@ func main() {
 		defer log.Context(ctx).RecordDuration("handler total process duration").Stop()
 		time.Sleep(100 * time.Millisecond) // Simulate a process
 
-		// Assign user id to Log Request
-		log.Context(ctx).UserID = 2020
-
 		// Add some extra data
 		log.Context(ctx).ExtraData["userData"] = struct {
 			Name string

@@ -78,58 +78,57 @@ func main() {
 ## 🍀 Sample Log Request
 ```json
 {
-    "level": "info",
-    "time": "2024-03-24T00:18:38.456+0700",
-    "caller": "runtime/asm_amd64.s:1650",
+    "time": "2024-06-28T16:41:44.199884969+07:00",
+    "level": "INFO",
     "msg": "REQUEST_LOG",
-    "ProcessID": "jXRKAxgBG6zAqdNfP9ce",
-    "UserID": 2020,
-    "IP": "127.0.0.1",
-    "Method": "GET",
-    "URL": "localhost:8080/",
-    "RequestHeader": {
+    "caller": "log/request.go:58",
+    "processID": "sHVAVNsHNRfRrHSxcDAU",
+    "ip": "127.0.0.1",
+    "method": "GET",
+    "url": "localhost:8080/",
+    "statusCode": 200,
+    "requestDuration": 102,
+    "requestHeader": {
         "Accept": [
             "*/*"
         ],
         "User-Agent": [
-            "curl/8.1.2"
+            "curl/7.68.0"
         ]
     },
-    "RequestBody": {},
-    "ResponseHeader": {
+    "requestBody": {},
+    "responseHeader": {
         "Content-Type": [
             "text/plain; charset=UTF-8"
         ]
     },
-    "ResponseBody": null,
-    "StatusCode": 200,
-    "RequestDuration": 105,
-    "ExtraData": {
+    "responseBody": null,
+    "extraData": {
         "userData": {
             "Name": "Bob",
             "Age": 29
         }
     },
-    "SubLog": [
+    "subLog": [
         {
-            "level": "[DEBUG] echo/main.go:46",
+            "level": "[DEBUG] echo/main.go:43",
             "message": "Testing Log Request Debug"
         },
         {
-            "level": "[INFO] echo/main.go:47",
+            "level": "[INFO] echo/main.go:44",
             "message": "Testing Log Request Info"
         },
         {
-            "level": "[WARN] echo/main.go:48",
+            "level": "[WARN] echo/main.go:45",
             "message": "Testing Log Request Warn"
         },
         {
-            "level": "[ERROR] echo/main.go:49",
+            "level": "[ERROR] echo/main.go:46",
             "message": "Testing Log Request Error"
         },
         {
-            "level": "[DURATION] echo/main.go:57",
-            "message": "[105.034ms] handler total process duration"
+            "level": "[DURATION] echo/main.go:54",
+            "message": "[102.034ms] handler total process duration"
         }
     ]
 }
