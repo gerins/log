@@ -10,49 +10,61 @@ import (
 
 type (
 	trace struct {
-		method, url        string
-		reqHeader, reqBody any
-		respHeader         http.Header
-		RawRespBody        []byte
-		statusCode         int
-		timeStart          time.Time
+		Time           time.Time   `json:"time"`
+		Method         string      `json:"method"`
+		Url            string      `json:"-"`
+		StatusCode     int         `json:"statusCode"`
+		Duration       int64       `json:"duration"`
+		ReqHeader      any         `json:"requestHeader"`
+		ReqBody        any         `json:"requestBody"`
+		RespHeader     http.Header `json:"responseHeader"`
+		RespBody       any         `json:"responseBody"`
+		RawRespBody    []byte      `json:"-"`
+		timeStart      time.Time   `json:"-"`
+		addToExtraData bool        `json:"-"`
 	}
 )
 
-func NewTrace(method, url string, reqHeader, reqBody any) trace {
+func NewTrace(method, url string, reqHeader, reqBody any, addToExtraData bool) trace {
 	return trace{
-		method:    method,
-		url:       url,
-		reqHeader: reqHeader,
-		reqBody:   reqBody,
-		timeStart: time.Now(),
+		Time:           time.Now(),
+		Method:         method,
+		Url:            url,
+		ReqHeader:      reqHeader,
+		ReqBody:        reqBody,
+		timeStart:      time.Now(),
+		addToExtraData: addToExtraData,
 	}
 }
 
 func (t *trace) Save(ctx context.Context, resp *http.Response) {
-	var respModel any
-	if err := json.Unmarshal(t.RawRespBody, &respModel); err != nil {
-		respModel = string(t.RawRespBody)
+	if err := json.Unmarshal(t.RawRespBody, &t.RespBody); err != nil {
+		t.RespBody = string(t.RawRespBody)
 	}
 
 	// Reading response body
 	if resp != nil {
-		t.respHeader = resp.Header
-		t.statusCode = resp.StatusCode
+		t.RespHeader = resp.Header
+		t.StatusCode = resp.StatusCode
 	}
 
-	Context(ctx).ExtraData[t.url] = t
+	t.Duration = time.Since(t.timeStart).Milliseconds()
+
+	if t.addToExtraData {
+		Context(ctx).ExtraData[t.Url] = t
+		return
+	}
 
 	globalLogger.LogAttrs(ctx, LevelTrace, "",
-		slog.String("caller", GetCaller("", 3)),
+		slog.String("caller", GetCaller("", 4)),
 		slog.String(processID, Context(ctx).ProcessID()),
-		slog.String("method", t.method),
-		slog.String("url", t.url),
-		slog.Int("statusCode", t.statusCode),
-		slog.Int64("requestDuration", time.Since(t.timeStart).Milliseconds()),
-		slog.Any("requestHeader", t.reqHeader),
-		slog.Any("requestBody", t.reqBody),
-		slog.Any("responseHeader", t.respHeader),
-		slog.Any("responseBody", respModel),
+		slog.String("method", t.Method),
+		slog.String("url", t.Url),
+		slog.Int("statusCode", t.StatusCode),
+		slog.Int64("requestDuration", t.Duration),
+		slog.Any("requestHeader", t.ReqHeader),
+		slog.Any("requestBody", t.ReqBody),
+		slog.Any("responseHeader", t.RespHeader),
+		slog.Any("responseBody", t.RespBody),
 	)
 }

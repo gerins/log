@@ -18,7 +18,8 @@ const (
 )
 
 type rest struct {
-	client *http.Client
+	client            *http.Client
+	addLogToExtraData bool
 }
 
 type Rest interface {
@@ -28,8 +29,9 @@ type Rest interface {
 	Delete(ctx context.Context, url string, header map[string]string, queryParams map[string]string) ([]byte, int, error)
 }
 
-func New(timeout time.Duration) Rest {
+func New(timeout time.Duration, addLogToExtraData bool) Rest {
 	return &rest{
+		addLogToExtraData: addLogToExtraData,
 		client: &http.Client{
 			Timeout: timeout,
 		},
@@ -40,7 +42,7 @@ func (r *rest) Post(ctx context.Context, url string, header map[string]string, p
 	var (
 		err          error
 		httpResponse *http.Response
-		trace        = log.NewTrace(http.MethodPost, url, header, payload)
+		trace        = log.NewTrace(http.MethodPost, url, header, payload, r.addLogToExtraData)
 	)
 
 	defer func() { trace.Save(ctx, httpResponse) }() // Logging the response
@@ -57,6 +59,10 @@ func (r *rest) Post(ctx context.Context, url string, header map[string]string, p
 	if err != nil {
 		log.Context(ctx).Errorf("error creating new request, %v", err)
 		return nil, 0, err
+	}
+
+	if header == nil {
+		header = make(map[string]string)
 	}
 
 	header[ContentType] = ApplicationJSON
@@ -91,7 +97,7 @@ func (r *rest) Put(ctx context.Context, url string, header map[string]string, pa
 	var (
 		err          error
 		httpResponse *http.Response
-		trace        = log.NewTrace(http.MethodPost, url, header, payload)
+		trace        = log.NewTrace(http.MethodPost, url, header, payload, r.addLogToExtraData)
 	)
 
 	defer func() { trace.Save(ctx, httpResponse) }() // Logging the response
@@ -108,6 +114,10 @@ func (r *rest) Put(ctx context.Context, url string, header map[string]string, pa
 	if err != nil {
 		log.Context(ctx).Errorf("error creating new request, %v", err)
 		return nil, 0, err
+	}
+
+	if header == nil {
+		header = make(map[string]string)
 	}
 
 	header[ContentType] = ApplicationJSON
@@ -142,7 +152,7 @@ func (r *rest) Get(ctx context.Context, url string, header map[string]string, qu
 	var (
 		err          error
 		httpResponse *http.Response
-		trace        = log.NewTrace(http.MethodPost, url, header, queryParams)
+		trace        = log.NewTrace(http.MethodPost, url, header, queryParams, r.addLogToExtraData)
 	)
 
 	defer func() { trace.Save(ctx, httpResponse) }() // Logging the response
@@ -152,6 +162,10 @@ func (r *rest) Get(ctx context.Context, url string, header map[string]string, qu
 	if err != nil {
 		log.Context(ctx).Errorf("error creating new request, %v", err)
 		return nil, 0, err
+	}
+
+	if header == nil {
+		header = make(map[string]string)
 	}
 
 	header[ProcessIDContextKey] = log.Context(ctx).ProcessID()
@@ -194,7 +208,7 @@ func (r *rest) Delete(ctx context.Context, url string, header map[string]string,
 	var (
 		err          error
 		httpResponse *http.Response
-		trace        = log.NewTrace(http.MethodPost, url, header, queryParams)
+		trace        = log.NewTrace(http.MethodPost, url, header, queryParams, r.addLogToExtraData)
 	)
 
 	defer func() { trace.Save(ctx, httpResponse) }() // Logging the response
@@ -204,6 +218,10 @@ func (r *rest) Delete(ctx context.Context, url string, header map[string]string,
 	if err != nil {
 		log.Context(ctx).Errorf("error creating new request, %v", err)
 		return nil, 0, err
+	}
+
+	if header == nil {
+		header = make(map[string]string)
 	}
 
 	header[ProcessIDContextKey] = log.Context(ctx).ProcessID()
