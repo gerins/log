@@ -23,8 +23,8 @@ type rest struct {
 }
 
 type Rest interface {
-	Post(ctx context.Context, url string, header map[string]string, payload interface{}) ([]byte, int, error)
-	Put(ctx context.Context, url string, header map[string]string, payload interface{}) ([]byte, int, error)
+	Post(ctx context.Context, url string, header map[string]string, payload any) ([]byte, int, error)
+	Put(ctx context.Context, url string, header map[string]string, payload any) ([]byte, int, error)
 	Get(ctx context.Context, url string, header map[string]string, queryParams map[string]string) ([]byte, int, error)
 	Delete(ctx context.Context, url string, header map[string]string, queryParams map[string]string) ([]byte, int, error)
 }
@@ -38,7 +38,7 @@ func New(timeout time.Duration, addLogToExtraData bool) Rest {
 	}
 }
 
-func (r *rest) Post(ctx context.Context, url string, header map[string]string, payload interface{}) ([]byte, int, error) {
+func (r *rest) Post(ctx context.Context, url string, header map[string]string, payload any) ([]byte, int, error) {
 	var (
 		err          error
 		httpResponse *http.Response
@@ -93,7 +93,7 @@ func (r *rest) Post(ctx context.Context, url string, header map[string]string, p
 	return rawResponse, httpResponse.StatusCode, nil
 }
 
-func (r *rest) Put(ctx context.Context, url string, header map[string]string, payload interface{}) ([]byte, int, error) {
+func (r *rest) Put(ctx context.Context, url string, header map[string]string, payload any) ([]byte, int, error) {
 	var (
 		err          error
 		httpResponse *http.Response
