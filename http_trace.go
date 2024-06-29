@@ -20,7 +20,6 @@ type (
 		RespHeader     http.Header `json:"responseHeader"`
 		RespBody       any         `json:"responseBody"`
 		RawRespBody    []byte      `json:"-"`
-		timeStart      time.Time   `json:"-"`
 		addToExtraData bool        `json:"-"`
 	}
 )
@@ -32,7 +31,6 @@ func NewTrace(method, url string, reqHeader, reqBody any, addToExtraData bool) t
 		Url:            url,
 		ReqHeader:      reqHeader,
 		ReqBody:        reqBody,
-		timeStart:      time.Now(),
 		addToExtraData: addToExtraData,
 	}
 }
@@ -48,7 +46,7 @@ func (t *trace) Save(ctx context.Context, resp *http.Response) {
 		t.StatusCode = resp.StatusCode
 	}
 
-	t.Duration = time.Since(t.timeStart).Milliseconds()
+	t.Duration = time.Since(t.Time).Milliseconds()
 
 	if t.addToExtraData {
 		Context(ctx).ExtraData[t.Url] = t
