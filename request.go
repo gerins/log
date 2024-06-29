@@ -64,6 +64,9 @@ func (m *request) Save() {
 		m.WaitGroup.Wait() // Wait for all goroutine finish before logging
 
 		if enableHideSensitiveData {
+			for _, data := range m.ExtraData {
+				maskSensitiveData(data)
+			}
 			maskSensitiveData(m.ReqBody)
 			maskSensitiveData(m.RespBody)
 		}

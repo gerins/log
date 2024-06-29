@@ -2,7 +2,6 @@ package log
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"io"
 	"log"
@@ -21,6 +20,7 @@ const (
 	LevelInfo    = slog.LevelInfo
 	LevelWarning = slog.LevelWarn
 	LevelError   = slog.LevelError
+	LevelFatal   = slog.Level(12)
 	LevelTrace   = slog.Level(16) // Trace service to service communication
 	LevelRequest = slog.Level(17) // Request log
 )
@@ -137,8 +137,10 @@ func InitWithConfig(cfg Config) {
 					a.Value = slog.StringValue("INFO")
 				case level < LevelError:
 					a.Value = slog.StringValue("WARN")
-				case level < LevelTrace:
+				case level < LevelFatal:
 					a.Value = slog.StringValue("ERROR")
+				case level < LevelTrace:
+					a.Value = slog.StringValue("FATAL")
 				case level < LevelRequest:
 					a.Value = slog.StringValue("TRACE")
 				default:
@@ -184,32 +186,11 @@ func Errorf(format string, i ...any) {
 }
 
 func Fatal(i ...any) {
-	globalLogger.Error(formatMultipleArguments(i))
+	globalLogger.Log(context.Background(), LevelFatal, formatMultipleArguments(i))
 	os.Exit(1)
 }
 
 func Fatalf(msg string, i ...any) {
-	globalLogger.Error(fmt.Sprintf(msg, i...))
+	globalLogger.Log(context.Background(), LevelFatal, fmt.Sprintf(msg, i...))
 	os.Exit(1)
-}
-
-// Trace service to service communication
-func Tracing(processId, url, method string, resCode int, resPayload []byte, reqHeader, payload, respHeader any, err error, dur int64) {
-	var responsePayload any
-	if err := json.Unmarshal(resPayload, &responsePayload); err != nil {
-		responsePayload = string(resPayload)
-	}
-	go globalLogger.LogAttrs(context.Background(), LevelTrace, "",
-		slog.String("caller", GetCaller("", 3)),
-		slog.String(processID, processId),
-		slog.String("method", method),
-		slog.String("url", url),
-		slog.Int("statusCode", resCode),
-		slog.Int64("requestDuration", dur),
-		slog.Any("error", err),
-		slog.Any("requestHeader", reqHeader),
-		slog.Any("requestBody", payload),
-		slog.Any("responseHeader", respHeader),
-		slog.Any("responseBody", responsePayload),
-	)
 }
