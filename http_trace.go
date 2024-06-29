@@ -13,7 +13,7 @@ type (
 		method, url        string
 		reqHeader, reqBody any
 		respHeader         http.Header
-		RespBody           []byte
+		RawRespBody        []byte
 		statusCode         int
 		timeStart          time.Time
 	}
@@ -31,8 +31,8 @@ func NewTrace(method, url string, reqHeader, reqBody any) trace {
 
 func (t *trace) Save(ctx context.Context, resp *http.Response) {
 	var respModel any
-	if err := json.Unmarshal(t.RespBody, &respModel); err != nil {
-		respModel = string(t.RespBody)
+	if err := json.Unmarshal(t.RawRespBody, &respModel); err != nil {
+		respModel = string(t.RawRespBody)
 	}
 
 	// Reading response body
@@ -40,6 +40,8 @@ func (t *trace) Save(ctx context.Context, resp *http.Response) {
 		t.respHeader = resp.Header
 		t.statusCode = resp.StatusCode
 	}
+
+	Context(ctx).ExtraData[t.url] = t
 
 	globalLogger.LogAttrs(ctx, LevelTrace, "",
 		slog.String("caller", GetCaller("", 3)),
