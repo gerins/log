@@ -1,7 +1,7 @@
 # 📜 Log Package 
 [![Generic badge](https://img.shields.io/badge/Go-v1.22.0-blue.svg)](https://golang.org/doc/go1.17)
 [![Generic badge](https://img.shields.io/badge/status-development-green.svg)](https://shields.io/)
-[![Generic badge](https://img.shields.io/badge/release-v2.0.0-yellow.svg)](https://shields.io/)
+[![Generic badge](https://img.shields.io/badge/release-v1.1.0-yellow.svg)](https://shields.io/)
 
 
 ## 📌 Getting Started
