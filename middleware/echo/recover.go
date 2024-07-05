@@ -3,12 +3,13 @@ package echo
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"runtime"
 
-	"github.com/gerins/log"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
+
+	"github.com/gerins/log"
 )
 
 type (
@@ -84,7 +85,7 @@ func RecoverWithConfig(config RecoverConfig) echo.MiddlewareFunc {
 					// Extract Request Body from request
 					reqBody := []byte{}
 					if c.Request().Body != nil {
-						reqBody, _ = ioutil.ReadAll(c.Request().Body)
+						reqBody, _ = io.ReadAll(c.Request().Body)
 					}
 
 					extractRequestData(ctx, c, reqBody, nil)

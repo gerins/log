@@ -3,9 +3,10 @@ package main
 import (
 	"net/http"
 
+	"github.com/gofiber/fiber/v2"
+
 	"github.com/gerins/log"
 	middlewareLog "github.com/gerins/log/middleware/fiber"
-	"github.com/gofiber/fiber/v2"
 )
 
 func main() {
@@ -18,10 +19,6 @@ func main() {
 	f.Get("", func(c *fiber.Ctx) error {
 		// Get user context from fiber.
 		ctx := c.UserContext()
-
-		// Assign user id to Log Request model
-		// So wen can know who make the request to the server
-		log.Context(ctx).UserID = 2020
 
 		// Log Request
 		log.Context(ctx).Debug("Testing Log Request Debug")

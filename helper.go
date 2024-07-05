@@ -3,7 +3,9 @@ package log
 import (
 	"fmt"
 	"math/rand"
+	"reflect"
 	"runtime"
+	"strings"
 
 	"go.uber.org/zap/zapcore"
 )
@@ -21,7 +23,7 @@ func generateRandomString(length int) string {
 }
 
 // formatMultipleArguments is used for formatting multiple argument input
-func formatMultipleArguments(args []interface{}) string {
+func formatMultipleArguments(args []any) string {
 	var format string
 	for i := range args {
 		if i > 0 {
@@ -36,5 +38,27 @@ func formatMultipleArguments(args []interface{}) string {
 // example project_name/usecase/user.go:34
 func GetCaller(level string, skip int) string {
 	entryCaller := zapcore.NewEntryCaller(runtime.Caller(skip))
+	if level == "" {
+		return entryCaller.TrimmedPath()
+	}
 	return fmt.Sprintf("[%s] %s", level, entryCaller.TrimmedPath())
+}
+
+func maskSensitiveData(payload any) {
+	// Check if req is a pointer to a struct
+	v := reflect.ValueOf(payload)
+	if v.Kind() != reflect.Ptr || v.Elem().Kind() != reflect.Struct {
+		return
+	}
+
+	v = v.Elem()
+	t := v.Type()
+
+	for i := 0; i < v.NumField(); i++ {
+		field := v.Field(i)
+		tag := t.Field(i).Tag.Get("log")
+		if tag == "hide" && field.Kind() == reflect.String {
+			field.SetString(strings.Repeat("*", len(field.String())))
+		}
+	}
 }

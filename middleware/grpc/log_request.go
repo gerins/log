@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"runtime"
 
-	"github.com/spf13/cast"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/peer"
@@ -20,7 +19,7 @@ var (
 )
 
 func SaveLogRequest() grpc.UnaryServerInterceptor {
-	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp interface{}, err error) {
+	return func(ctx context.Context, req any, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp any, err error) {
 		requestLog := log.NewRequest()
 		ctx = requestLog.SaveToContext(ctx)
 
@@ -30,9 +29,6 @@ func SaveLogRequest() grpc.UnaryServerInterceptor {
 
 			if processID := requestMetadata.Get("process_id"); len(processID) != 0 {
 				requestLog.SetProcessID(processID[0])
-			}
-			if userID := requestMetadata.Get("user_id"); len(userID) != 0 {
-				requestLog.UserID = cast.ToInt(userID[0])
 			}
 		}
 

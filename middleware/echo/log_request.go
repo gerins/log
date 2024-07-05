@@ -4,9 +4,10 @@ import (
 	"context"
 	"encoding/json"
 
-	"github.com/gerins/log"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
+
+	"github.com/gerins/log"
 )
 
 // SetLogRequest is used for save log request model to echo locals as context.
@@ -50,7 +51,13 @@ func extractRequestData(ctx context.Context, c echo.Context, req, resp []byte) {
 	requestLog.ReqHeader = getHeader(c, "REQ")
 	requestLog.RespHeader = getHeader(c, "RESP")
 	requestLog.StatusCode = c.Response().Status
-	json.Unmarshal(resp, &requestLog.RespBody) // Get response body
+
+	// Set the response body if not set yet
+	if requestLog.RespBody == nil {
+		if err := json.Unmarshal(resp, &requestLog.RespBody); err != nil {
+			requestLog.RespBody = string(resp)
+		}
+	}
 
 	// Extract Query Args if using GET or DELETE Method
 	if requestLog.Method == "GET" || requestLog.Method == "DELETE" {
@@ -60,7 +67,11 @@ func extractRequestData(ctx context.Context, c echo.Context, req, resp []byte) {
 		}
 		requestLog.ReqBody = queryArgs
 	} else {
-		json.Unmarshal(req, &requestLog.ReqBody) // Get request body
+		if requestLog.ReqBody == nil {
+			if err := json.Unmarshal(req, &requestLog.ReqBody); err != nil {
+				requestLog.ReqBody = string(req)
+			}
+		}
 	}
 }
 
