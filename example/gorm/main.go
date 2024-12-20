@@ -72,7 +72,11 @@ func initGormDatabase() *gorm.DB {
 	address := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%d sslmode=disable",
 		cfg.Host, cfg.User, cfg.Pass, cfg.DatabaseName, cfg.Port)
 
-	db, err := gorm.Open(postgres.Open(address), &gorm.Config{Logger: gormLogger.Default})
+	gormCfg := &gorm.Config{
+		Logger: gormLogger.Default, // Assign new logger
+	}
+
+	db, err := gorm.Open(postgres.Open(address), gormCfg)
 	if err != nil {
 		log.Fatal(err.Error())
 	}

@@ -1,21 +1,71 @@
-# 📜 Log Package 
-[![Generic badge](https://img.shields.io/badge/Go-v1.22.0-blue.svg)](https://golang.org/doc/go1.17)
-[![Generic badge](https://img.shields.io/badge/status-development-green.svg)](https://shields.io/)
-[![Generic badge](https://img.shields.io/badge/release-v1.1.0-yellow.svg)](https://shields.io/)
+# 📜 Go Server Logging Middleware
+
+[![Go Version](https://img.shields.io/badge/Go-v1.22.0-blue.svg)](https://golang.org/doc/go1.22)[![Status](https://img.shields.io/badge/status-development-green.svg)](https://shields.io/)[![Release](https://img.shields.io/badge/release-v1.1.0-yellow.svg)](https://shields.io/)
+
+Go Server Logging Middleware is a structured logging library for Go servers using frameworks like [Echo](https://echo.labstack.com) or [Fiber](https://gofiber.io). Its key feature is **sub-logging**, enabling you to capture the entire lifecycle of a request, including logs generated across handlers, use cases, and repositories. This makes it easier to trace and debug issues efficiently.
 
 
-## 📌 Getting Started
-```shell
+
+## 🌟 Features
+
+- **Unified Request Logs**: Consolidates logs for each request into a single structured entry.
+- **Sub-logging Support**: Tracks logs from handlers, use cases, and repositories for detailed traceability.
+- **Customizable Logging**: Configure log levels, formats, and output targets to suit your needs.
+- **Framework Integration**: Prebuilt examples for Echo, Fiber, and GORM.
+- **JSON Structured Logs**: Easy integration with log aggregation and monitoring tools like Elasticsearch and Kibana.
+
+
+
+## 📦 Installation
+
+Add the package to your Go project:
+
+```bash
 go get -u github.com/gerins/log
 ```
 
-## 🍀 Sample Log Request
-```json
-{"time":"2024-06-28T20:02:49.496462+07:00","level":"DEBUG","msg":"Testing Global Log Debug"}
-{"time":"2024-06-28T20:02:49.499957+07:00","level":"INFO","msg":"Testing Global Log Info"}
-{"time":"2024-06-28T20:02:49.500123+07:00","level":"WARN","msg":"Testing Global Log Warn"}
-{"time":"2024-06-28T20:02:49.500188+07:00","level":"ERROR","msg":"Testing Global Log Error"}
+
+
+## 🔧 Usage
+
+### Example Integrations
+
+Check out the examples directory for ready-to-use implementations:
+
+- **[Echo Example](https://github.com/gerins/log/blob/main/example/echo/main.go)**  
+- **[Fiber Example](https://github.com/gerins/log/blob/main/example/fiber/main.go)**  
+- **[Gorm Example](https://github.com/gerins/log/blob/main/example/gorm/main.go)** For integrate Gorm log output to sublogging
+Sub-log
+
+### Example syntax
+```go
+import "github.com/gerins/log"
+
+// General logging
+log.Debug("Testing Global Log Debug")
+log.Info("Testing Global Log Info")
+log.Warn("Testing Global Log Warn")
+log.Error("Testing Global Log Error")
+
+// This log will append to Sub-logging
+log.Context(ctx).Debug("Testing Log Request Debug")
+log.Context(ctx).Info("Testing Log Request Info")
+log.Context(ctx).Warn("Testing Log Request Warn")
+log.Context(ctx).Error("Testing Log Request Error")
 ```
+
+## 📊 Sample Logs
+
+### General Log Entry
+```json
+{
+    "time": "2024-06-28T20:02:49.496462+07:00",
+    "level": "DEBUG",
+    "msg": "Testing Global Log Debug"
+}
+```
+
+### Detailed Request Log with Sub-logging
 ```json
 {
     "time": "2024-06-28T20:00:02.089362+07:00",
@@ -28,18 +78,12 @@ go get -u github.com/gerins/log
     "statusCode": 200,
     "requestDuration": 104,
     "requestHeader": {
-        "Accept": [
-            "*/*"
-        ],
-        "User-Agent": [
-            "curl/8.6.0"
-        ]
+        "Accept": ["*/*"],
+        "User-Agent": ["curl/8.6.0"]
     },
     "requestBody": {},
     "responseHeader": {
-        "Content-Type": [
-            "text/plain; charset=UTF-8"
-        ]
+        "Content-Type": ["text/plain; charset=UTF-8"]
     },
     "responseBody": null,
     "extraData": {
@@ -68,71 +112,43 @@ go get -u github.com/gerins/log
         {
             "level": "[DURATION] echo/main.go:54",
             "message": "[104.193ms] handler total process duration"
-        }
+        },
+        {
+            "level": "[DATABASE] repository/person.go:45",
+            "message": "record not found [82.751ms] [rows:0] SELECT * FROM \"person\" WHERE id = 1 ORDER BY \"person\".\"id\" LIMIT 1"
+        },
     ]
 }
 ```
 
-### Echo 
-```go
-package main
 
-import (
-	"context"
-	"net/http"
-	"time"
+## 💡 Why Use This Library?
 
-	"github.com/labstack/echo/v4"
-	"github.com/labstack/echo/v4/middleware"
+1. **Simplified Debugging**: View all relevant logs for a single request in one place.
+2. **Traceability**: Easily identify issues at any layer of your application.
+3. **Flexibility**: Integrates seamlessly with popular frameworks and tools.
+4. **Structured Output**: Well-formatted JSON logs for modern logging systems.
 
-	"github.com/gerins/log"
-	middlewareLog "github.com/gerins/log/middleware/echo"
-)
 
-func main() {
-	// Using the default configuration. Please use InitWithConfig() for the production environment.
-	log.Init()
-	e := echo.New()
 
-	// Initialize logging middleware
-	e.Use(middlewareLog.SetLogRequest())                       // Mandatory
-	e.Use(middleware.BodyDump(middlewareLog.SaveLogRequest())) // Mandatory
+## 📘 Documentation
 
-	// Route to simulate logging request
-	e.GET("/", func(c echo.Context) error {
-		// Get context from echo locals
-		ctx := c.Get("ctx").(context.Context)
+`WIP`
 
-		// Capture a duration for a function
-		defer log.Context(ctx).RecordDuration("handler total process duration").Stop()
-		time.Sleep(100 * time.Millisecond) // Simulate a process
 
-		// Add some extra data
-		log.Context(ctx).ExtraData["userData"] = struct {
-			Name string
-			Age  int
-		}{
-			Name: "Bob",
-			Age:  29,
-		}
+## 🙌 Contributing
 
-		// Log Request
-		log.Context(ctx).Debug("Testing Log Request Debug")
-		log.Context(ctx).Info("Testing Log Request Info")
-		log.Context(ctx).Warn("Testing Log Request Warn")
-		log.Context(ctx).Error("Testing Log Request Error")
+Pull requests are welcome! For major changes, please open an issue first to discuss what you'd like to change.
 
-		// Global log
-		log.Debug("Testing Global Log Debug")
-		log.Info("Testing Global Log Info")
-		log.Warn("Testing Global Log Warn")
-		log.Error("Testing Global Log Error")
 
-		return c.String(http.StatusOK, "Hello, Log!")
-	})
+## 🔒 License
 
-	e.Start("localhost:8080")
-}
-```
+This project is licensed under the [MIT License](https://opensource.org/licenses/MIT). See the `LICENSE` file for details.
 
+
+## ✍️ Author
+
+**Garin Prakoso** 
+[GitHub](https://github.com/gerins) | [LinkedIn](https://www.linkedin.com/in/garin-prakoso-60244b1a2/)
+Feel free to contact me if you need help or have any feedback.
 
