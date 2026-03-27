@@ -26,7 +26,7 @@ type (
 
 	// Data Model for tracking information of incoming request
 	request struct {
-		processID  string
+		traceID    string
 		IP         string
 		Method     string
 		URL        string
@@ -34,11 +34,11 @@ type (
 		ReqBody    any
 		RespHeader any
 		RespBody   any
-		StatusCode int            // HTTP status code or other code
-		timeStart  time.Time      // Capture when the request start
-		ExtraData  map[string]any // Additional data
-		subLogs    []subLog       // Sub logging data
-		WaitGroup  *sync.WaitGroup
+		StatusCode int             // HTTP status code or other code
+		timeStart  time.Time       // Capture when the request start
+		ExtraData  map[string]any  // Additional data
+		subLogs    []subLog        // Sub logging data
+		WaitGroup  *sync.WaitGroup // Wait for all goroutine finish before printing log
 	}
 
 	// Data model for saving all log output in single request flow
@@ -51,7 +51,7 @@ type (
 // NewRequest will create new log data model for incoming request
 func NewRequest() *request {
 	return &request{
-		processID: generateRandomString(20),
+		traceID:   generateRandomString(20),
 		timeStart: time.Now(),
 		ExtraData: make(map[string]any),
 		WaitGroup: new(sync.WaitGroup),
@@ -73,12 +73,12 @@ func (m *request) Save() {
 
 		globalLogger.LogAttrs(context.Background(), LevelRequest, "",
 			slog.String("caller", GetCaller("", 1)),
-			slog.String(processID, m.processID),
+			slog.String(traceID, m.traceID),
 			slog.String("ip", m.IP),
 			slog.String("method", m.Method),
 			slog.String("url", m.URL),
 			slog.Int("statusCode", m.StatusCode),
-			slog.Int64("requestDuration", time.Since(m.timeStart).Milliseconds()),
+			slog.Int64("totalDuration", time.Since(m.timeStart).Milliseconds()),
 			slog.Any("requestHeader", m.ReqHeader),
 			slog.Any("requestBody", m.ReqBody),
 			slog.Any("responseHeader", m.RespHeader),
@@ -89,14 +89,14 @@ func (m *request) Save() {
 	}()
 }
 
-// SetProcessID is used for set process id as your preferences format.
-func (m *request) SetProcessID(value string) {
-	m.processID = value
+// SetTraceID is used for set trace id as your preferences format.
+func (m *request) SetTraceID(traceID string) {
+	m.traceID = traceID
 }
 
-// ProcessID is used for get current process id from log request model.
-func (m *request) ProcessID() string {
-	return m.processID
+// TraceID is used for get current process id from log request model.
+func (m *request) TraceID() string {
+	return m.traceID
 }
 
 func (m *request) SaveToContext(parent context.Context) context.Context {
@@ -243,7 +243,7 @@ func (m *request) globalLog(level slog.Level, msg string, caller string) {
 
 	attrs := []slog.Attr{
 		slog.String("caller", caller),
-		slog.String(processID, m.processID),
+		slog.String(traceID, m.traceID),
 		slog.String("msg", msg),
 	}
 

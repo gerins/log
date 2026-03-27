@@ -27,8 +27,8 @@ func SaveLogRequest() grpc.UnaryServerInterceptor {
 		if requestMetadata, ok := metadata.FromIncomingContext(ctx); ok {
 			requestLog.ReqHeader = requestMetadata
 
-			if processID := requestMetadata.Get("process_id"); len(processID) != 0 {
-				requestLog.SetProcessID(processID[0])
+			if traceID := requestMetadata.Get("trace_id"); len(traceID) != 0 {
+				requestLog.SetTraceID(traceID[0])
 			}
 		}
 

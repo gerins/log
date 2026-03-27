@@ -59,8 +59,9 @@ log.Context(ctx).Error("Testing Log Request Error")
 ### General Log Entry
 ```json
 {
-    "time": "2024-06-28T20:02:49.496462+07:00",
+    "time": "2026-03-28T01:48:12.699601+07:00",
     "level": "DEBUG",
+    "caller": "echo/main.go:49",
     "msg": "Testing Global Log Debug"
 }
 ```
@@ -71,12 +72,12 @@ log.Context(ctx).Error("Testing Log Request Error")
     "time": "2024-06-28T20:00:02.089362+07:00",
     "level": "TRACE",
     "caller": "log/request.go:66",
-    "processID": "oWCEjmzbdw7AMuob17wa",
+    "traceID": "oWCEjmzbdw7AMuob17wa",
     "ip": "127.0.0.1",
     "method": "GET",
     "url": "localhost:8080/",
     "statusCode": 200,
-    "requestDuration": 104,
+    "totalDuration": 104,
     "requestHeader": {
         "Accept": ["*/*"],
         "User-Agent": ["curl/8.6.0"]
@@ -95,27 +96,27 @@ log.Context(ctx).Error("Testing Log Request Error")
     "subLog": [
         {
             "level": "[DEBUG] echo/main.go:43",
-            "message": "Testing Log Request Debug"
+            "msg": "Testing Log Request Debug"
         },
         {
             "level": "[INFO] echo/main.go:44",
-            "message": "Testing Log Request Info"
+            "msg": "Testing Log Request Info"
         },
         {
             "level": "[WARN] echo/main.go:45",
-            "message": "Testing Log Request Warn"
+            "msg": "Testing Log Request Warn"
         },
         {
             "level": "[ERROR] echo/main.go:46",
-            "message": "Testing Log Request Error"
+            "msg": "Testing Log Request Error"
         },
         {
             "level": "[DURATION] echo/main.go:54",
-            "message": "[104.193ms] handler total process duration"
+            "msg": "[104.193ms] handler total process duration"
         },
         {
             "level": "[DATABASE] repository/person.go:45",
-            "message": "record not found [82.751ms] [rows:0] SELECT * FROM \"person\" WHERE id = 1 ORDER BY \"person\".\"id\" LIMIT 1"
+            "msg": "record not found [82.751ms] [rows:0] SELECT * FROM \"person\" WHERE id = 1 ORDER BY \"person\".\"id\" LIMIT 1"
         },
     ]
 }

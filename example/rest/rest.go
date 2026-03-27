@@ -12,9 +12,9 @@ import (
 )
 
 const (
-	ProcessIDContextKey = "processID"
-	ContentType         = "Content-Type"
-	ApplicationJSON     = "application/json"
+	TraceIDContextKey = "traceID"
+	ContentType       = "Content-Type"
+	ApplicationJSON   = "application/json"
 )
 
 type rest struct {
@@ -66,7 +66,7 @@ func (r *rest) Post(ctx context.Context, url string, header map[string]string, p
 	}
 
 	header[ContentType] = ApplicationJSON
-	header[ProcessIDContextKey] = log.Context(ctx).ProcessID()
+	header[TraceIDContextKey] = log.Context(ctx).TraceID()
 
 	// Adding header to the request
 	for key, value := range header {
@@ -121,7 +121,7 @@ func (r *rest) Put(ctx context.Context, url string, header map[string]string, pa
 	}
 
 	header[ContentType] = ApplicationJSON
-	header[ProcessIDContextKey] = log.Context(ctx).ProcessID()
+	header[TraceIDContextKey] = log.Context(ctx).TraceID()
 
 	// Adding header to the request
 	for key, value := range header {
@@ -168,7 +168,7 @@ func (r *rest) Get(ctx context.Context, url string, header map[string]string, qu
 		header = make(map[string]string)
 	}
 
-	header[ProcessIDContextKey] = log.Context(ctx).ProcessID()
+	header[TraceIDContextKey] = log.Context(ctx).TraceID()
 
 	// Adding header to the request
 	for key, value := range header {
@@ -224,7 +224,7 @@ func (r *rest) Delete(ctx context.Context, url string, header map[string]string,
 		header = make(map[string]string)
 	}
 
-	header[ProcessIDContextKey] = log.Context(ctx).ProcessID()
+	header[TraceIDContextKey] = log.Context(ctx).TraceID()
 
 	// Adding header to the request
 	for key, value := range header {

@@ -55,7 +55,7 @@ func (t *trace) Save(ctx context.Context, resp *http.Response) {
 
 	globalLogger.LogAttrs(ctx, LevelTrace, "",
 		slog.String("caller", GetCaller("", 4)),
-		slog.String(processID, Context(ctx).ProcessID()),
+		slog.String(traceID, Context(ctx).TraceID()),
 		slog.String("method", t.Method),
 		slog.String("url", t.Url),
 		slog.Int("statusCode", t.StatusCode),

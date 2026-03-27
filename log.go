@@ -13,7 +13,7 @@ import (
 )
 
 const (
-	processID = "processID"
+	traceID = "traceID"
 
 	// Logging level from least important to most important
 	LevelDebug   = slog.LevelDebug
