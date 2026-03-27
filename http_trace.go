@@ -59,7 +59,7 @@ func (t *trace) Save(ctx context.Context, resp *http.Response) {
 		slog.String("method", t.Method),
 		slog.String("url", t.Url),
 		slog.Int("statusCode", t.StatusCode),
-		slog.Int64("requestDuration", t.Duration),
+		slog.Int64("totalDuration", t.Duration),
 		slog.Any("requestHeader", t.ReqHeader),
 		slog.Any("requestBody", t.ReqBody),
 		slog.Any("responseHeader", t.RespHeader),

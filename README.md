@@ -11,7 +11,7 @@ Go Server Logging Middleware is a structured logging library for Go servers usin
 - **Unified Request Logs**: Consolidates logs for each request into a single structured entry.
 - **Sub-logging Support**: Tracks logs from handlers, use cases, and repositories for detailed traceability.
 - **Customizable Logging**: Configure log levels, formats, and output targets to suit your needs.
-- **Framework Integration**: Prebuilt examples for Echo, Fiber, and GORM.
+- **Framework Integration**: Prebuilt examples for Echo, Fiber, Gin, gRPC, and GORM.
 - **JSON Structured Logs**: Easy integration with log aggregation and monitoring tools like Elasticsearch and Kibana.
 
 
@@ -134,7 +134,8 @@ log.Context(ctx).Error("Testing Log Request Error")
 
 ## 📘 Documentation
 
-`WIP`
+- **[Usage Guide](docs/USAGE.md)**
+- **[Features Overview](docs/FEATURES.md)**
 
 
 ## 🙌 Contributing
@@ -152,4 +153,3 @@ This project is licensed under the [MIT License](https://opensource.org/licenses
 **Garin Prakoso** 
 [GitHub](https://github.com/gerins) | [LinkedIn](https://www.linkedin.com/in/garin-prakoso-60244b1a2/)
 Feel free to contact me if you need help or have any feedback.
-
