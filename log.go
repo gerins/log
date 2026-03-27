@@ -28,6 +28,7 @@ const (
 var (
 	globalLogger            *slog.Logger
 	enableHideSensitiveData bool
+	disableSubLogs          bool
 
 	DefaultConfig = Config{
 		LogToTerminal:     true,
@@ -55,6 +56,7 @@ type (
 		Level             slog.Level // Log output level. Default level DEBUG
 		CustomWriter      io.Writer  // Specify custom writer for log output
 		HideSensitiveData bool       // Enable hide sensitive data with struct tag `log:"hide"`
+		DisableSubLogs    bool       // Print to global log instead of append to sublogs
 	}
 )
 
@@ -83,6 +85,7 @@ func InitWithConfig(cfg Config) {
 	}
 
 	enableHideSensitiveData = cfg.HideSensitiveData
+	disableSubLogs = cfg.DisableSubLogs
 
 	var output []io.Writer
 

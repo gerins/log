@@ -119,49 +119,133 @@ func (m *request) RecordDuration(processName string) processData {
 
 func (m *request) Debug(i ...any) {
 	msg := formatMultipleArguments(i)
+
+	if disableSubLogs {
+		m.globalLog(LevelDebug, msg, "")
+		return
+	}
+
 	m.subLogs = append(m.subLogs, subLog{Level: GetCaller(subLevelDebug, subLogSkipLevel), Message: msg})
 }
 
 func (m *request) Debugf(format string, i ...any) {
-	m.subLogs = append(m.subLogs, subLog{Level: GetCaller(subLevelDebug, subLogSkipLevel), Message: fmt.Sprintf(format, i...)})
+	msg := fmt.Sprintf(format, i...)
+
+	if disableSubLogs {
+		m.globalLog(LevelDebug, msg, "")
+		return
+	}
+
+	m.subLogs = append(m.subLogs, subLog{Level: GetCaller(subLevelDebug, subLogSkipLevel), Message: msg})
 }
 
 func (m *request) Info(i ...any) {
 	msg := formatMultipleArguments(i)
+
+	if disableSubLogs {
+		m.globalLog(LevelInfo, msg, "")
+		return
+	}
+
 	m.subLogs = append(m.subLogs, subLog{Level: GetCaller(subLevelInfo, subLogSkipLevel), Message: msg})
 }
 
 func (m *request) Infof(format string, i ...any) {
-	m.subLogs = append(m.subLogs, subLog{Level: GetCaller(subLevelInfo, subLogSkipLevel), Message: fmt.Sprintf(format, i...)})
+	msg := fmt.Sprintf(format, i...)
+
+	if disableSubLogs {
+		m.globalLog(LevelInfo, msg, "")
+		return
+	}
+
+	m.subLogs = append(m.subLogs, subLog{Level: GetCaller(subLevelInfo, subLogSkipLevel), Message: msg})
 }
 
 func (m *request) Warn(i ...any) {
 	msg := formatMultipleArguments(i)
+
+	if disableSubLogs {
+		m.globalLog(LevelWarning, msg, "")
+		return
+	}
+
 	m.subLogs = append(m.subLogs, subLog{Level: GetCaller(subLevelWarn, subLogSkipLevel), Message: msg})
 }
 
 func (m *request) Warnf(format string, i ...any) {
-	m.subLogs = append(m.subLogs, subLog{Level: GetCaller(subLevelWarn, subLogSkipLevel), Message: fmt.Sprintf(format, i...)})
+	msg := fmt.Sprintf(format, i...)
+
+	if disableSubLogs {
+		m.globalLog(LevelWarning, msg, "")
+		return
+	}
+
+	m.subLogs = append(m.subLogs, subLog{Level: GetCaller(subLevelWarn, subLogSkipLevel), Message: msg})
 }
 
 func (m *request) Error(i ...any) {
 	msg := formatMultipleArguments(i)
+
+	if disableSubLogs {
+		m.globalLog(LevelError, msg, "")
+		return
+	}
+
 	m.subLogs = append(m.subLogs, subLog{Level: GetCaller(subLevelError, subLogSkipLevel), Message: msg})
 }
 
 func (m *request) Errorf(format string, i ...any) {
-	m.subLogs = append(m.subLogs, subLog{Level: GetCaller(subLevelError, subLogSkipLevel), Message: fmt.Sprintf(format, i...)})
+	msg := fmt.Sprintf(format, i...)
+
+	if disableSubLogs {
+		m.globalLog(LevelError, msg, "")
+		return
+	}
+
+	m.subLogs = append(m.subLogs, subLog{Level: GetCaller(subLevelError, subLogSkipLevel), Message: msg})
 }
 
 func (m *request) Fatal(i ...any) {
 	msg := formatMultipleArguments(i)
+
+	if disableSubLogs {
+		m.globalLog(LevelFatal, msg, "")
+		return
+	}
+
 	m.subLogs = append(m.subLogs, subLog{Level: GetCaller(subLevelFatal, subLogSkipLevel), Message: msg})
 }
 
 func (m *request) Fatalf(format string, i ...any) {
-	m.subLogs = append(m.subLogs, subLog{Level: GetCaller(subLevelFatal, subLogSkipLevel), Message: fmt.Sprintf(format, i...)})
+	msg := fmt.Sprintf(format, i...)
+
+	if disableSubLogs {
+		m.globalLog(LevelFatal, msg, "")
+		return
+	}
+
+	m.subLogs = append(m.subLogs, subLog{Level: GetCaller(subLevelFatal, subLogSkipLevel), Message: msg})
 }
 
-func (m *request) SubLog(level, message string) {
-	m.subLogs = append(m.subLogs, subLog{Level: level, Message: message})
+func (m *request) SubLog(levelAndCaller, message string) {
+	if disableSubLogs {
+		m.globalLog(LevelInfo, message, levelAndCaller)
+		return
+	}
+
+	m.subLogs = append(m.subLogs, subLog{Level: levelAndCaller, Message: message})
+}
+
+func (m *request) globalLog(level slog.Level, msg string, caller string) {
+	if caller == "" {
+		caller = GetCaller("", subLogSkipLevel+1)
+	}
+
+	attrs := []slog.Attr{
+		slog.String("caller", caller),
+		slog.String(processID, m.processID),
+		slog.String("message", msg),
+	}
+
+	globalLogger.LogAttrs(context.Background(), level, "", attrs...)
 }
