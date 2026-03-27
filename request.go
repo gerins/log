@@ -44,7 +44,7 @@ type (
 	// Data model for saving all log output in single request flow
 	subLog struct {
 		Level   string `json:"level"`
-		Message string `json:"message"`
+		Message string `json:"msg"`
 	}
 )
 
@@ -244,7 +244,7 @@ func (m *request) globalLog(level slog.Level, msg string, caller string) {
 	attrs := []slog.Attr{
 		slog.String("caller", caller),
 		slog.String(processID, m.processID),
-		slog.String("message", msg),
+		slog.String("msg", msg),
 	}
 
 	globalLogger.LogAttrs(context.Background(), level, "", attrs...)

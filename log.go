@@ -157,43 +157,47 @@ func InitWithConfig(cfg Config) {
 }
 
 func Debug(i ...any) {
-	globalLogger.Debug(formatMultipleArguments(i))
+	logWithCaller(LevelDebug, formatMultipleArguments(i))
 }
 
 func Debugf(format string, i ...any) {
-	globalLogger.Debug(fmt.Sprintf(format, i...))
+	logWithCaller(LevelDebug, fmt.Sprintf(format, i...))
 }
 
 func Info(i ...any) {
-	globalLogger.Info(formatMultipleArguments(i))
+	logWithCaller(LevelInfo, formatMultipleArguments(i))
 }
 
 func Infof(format string, i ...any) {
-	globalLogger.Info(fmt.Sprintf(format, i...))
+	logWithCaller(LevelInfo, fmt.Sprintf(format, i...))
 }
 
 func Warn(i ...any) {
-	globalLogger.Warn(formatMultipleArguments(i))
+	logWithCaller(LevelWarning, formatMultipleArguments(i))
 }
 
 func Warnf(format string, i ...any) {
-	globalLogger.Warn(fmt.Sprintf(format, i...))
+	logWithCaller(LevelWarning, fmt.Sprintf(format, i...))
 }
 
 func Error(i ...any) {
-	globalLogger.Error(formatMultipleArguments(i))
+	logWithCaller(LevelError, formatMultipleArguments(i))
 }
 
 func Errorf(format string, i ...any) {
-	globalLogger.Error(fmt.Sprintf(format, i...))
+	logWithCaller(LevelError, fmt.Sprintf(format, i...))
 }
 
 func Fatal(i ...any) {
-	globalLogger.Log(context.Background(), LevelFatal, formatMultipleArguments(i))
+	logWithCaller(LevelFatal, formatMultipleArguments(i))
 	os.Exit(1)
 }
 
 func Fatalf(msg string, i ...any) {
-	globalLogger.Log(context.Background(), LevelFatal, fmt.Sprintf(msg, i...))
+	logWithCaller(LevelFatal, fmt.Sprintf(msg, i...))
 	os.Exit(1)
+}
+
+func logWithCaller(level slog.Level, msg string) {
+	globalLogger.LogAttrs(context.Background(), level, "", slog.String("caller", GetCaller("", 3)), slog.String("msg", msg))
 }
